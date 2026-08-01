@@ -1,7 +1,20 @@
-﻿bin/
-obj/
-.vs/
-*.db
-*.db-shm
-*.db-wal
-appsettings.Development.json
+﻿# .NET
+backend/bin/
+backend/obj/
+backend/.vs/
+
+# SQLite
+backend/*.db
+backend/*.db-shm
+backend/*.db-wal
+
+# Configuración local
+backend/appsettings.Development.json
+
+# Node / Vue
+frontend/node_modules/
+frontend/dist/
+
+# IDE
+.vscode/
+.idea/

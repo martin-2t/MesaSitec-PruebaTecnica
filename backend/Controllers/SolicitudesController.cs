@@ -269,4 +269,59 @@ public class SolicitudesController : ControllerBase
             new { id = solicitud.Id },
             respuesta);
     }
+        [Authorize]
+    [HttpGet("{id}")]
+    public async Task<IActionResult> GetSolicitud(Guid id)
+    {
+        var tenantIdClaim = User.FindFirstValue("tenantId");
+
+        if (tenantIdClaim == null)
+            return Unauthorized();
+
+        if (!Guid.TryParse(tenantIdClaim, out var tenantId))
+            return Unauthorized();
+
+        var solicitud = await _context.Solicitudes
+            .Include(s => s.Categoria)
+            .Include(s => s.Solicitante)
+            .Include(s => s.Agente)
+            .FirstOrDefaultAsync(s =>
+                s.Id == id &&
+                s.TenantId == tenantId);
+
+        if (solicitud == null)
+        {
+            return NotFound();
+        }
+
+        var respuesta = new SolicitudDetailResponse
+        {
+            Id = solicitud.Id,
+            Codigo = solicitud.Codigo,
+            Titulo = solicitud.Titulo,
+            Descripcion = solicitud.Descripcion,
+            Estado = solicitud.Estado.ToString(),
+            Prioridad = solicitud.Prioridad.ToString(),
+
+            CategoriaId = solicitud.CategoriaId,
+            CategoriaNombre = solicitud.Categoria.Nombre,
+
+            SolicitanteId = solicitud.SolicitanteId,
+            SolicitanteNombre = solicitud.Solicitante.Nombre,
+
+            AgenteId = solicitud.AgenteId,
+            AgenteNombre = solicitud.Agente != null
+                ? solicitud.Agente.Nombre
+                : null,
+
+            FechaCreacion = solicitud.FechaCreacion,
+            FechaLimiteSla = solicitud.FechaLimiteSla,
+
+            FechaResolucion = solicitud.FechaResolucion,
+            MotivoResolucion = solicitud.MotivoResolucion,
+            MotivoCancelacion = solicitud.MotivoCancelacion
+        };
+
+        return Ok(respuesta);
+    }
 }
