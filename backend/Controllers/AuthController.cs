@@ -1,9 +1,6 @@
-using backend.Data;
 using backend.DTOs;
 using backend.Services;
 using Microsoft.AspNetCore.Mvc;
-using backend.Models;
-using Microsoft.EntityFrameworkCore;
 
 namespace backend.Controllers;
 
@@ -11,57 +8,26 @@ namespace backend.Controllers;
 [Route("api/[controller]")]
 public class AuthController : ControllerBase
 {
-    private readonly ApplicationDbContext _context;
-    private readonly JwtService _jwtService;
-    private readonly PasswordService _passwordService;
+    private readonly AuthService _authService;
 
-    public AuthController(
-        ApplicationDbContext context,
-        JwtService jwtService,
-        PasswordService passwordService)
+    public AuthController(AuthService authService)
     {
-        _context = context;
-        _jwtService = jwtService;
-        _passwordService = passwordService;
+        _authService = authService;
     }
 
     [HttpPost("login")]
     public async Task<ActionResult<LoginResponse>> Login(LoginRequest request)
     {
-        var usuario = await _context.Usuarios
-    .Include(u => u.Tenant)
-    .FirstOrDefaultAsync(u => u.Email == request.Email);
+        var respuesta = await _authService.LoginAsync(request);
 
-Console.WriteLine($"LOGIN -> Id: {usuario?.Id}  Email: {usuario?.Email}");
-
-        if (usuario == null)
+        if (respuesta == null)
         {
-            return Unauthorized("Email o contraseña incorrectos.");
+            return Unauthorized(new
+            {
+                codigo = "NO_AUTENTICADO"
+            });
         }
 
-        if (!_passwordService.VerifyPassword(
-            usuario,
-            request.Password,
-            usuario.PasswordHash))
-        {
-             return Unauthorized("Email o contraseña incorrectos.");
-        }
-
-        var token = _jwtService.GenerarToken(usuario);
-
-        return Ok(new LoginResponse
-{
-    AccessToken = token,
-    ExpiraEn = 28800,
-    Usuario = new UsuarioDto
-    {
-        Id = usuario.Id,
-        Nombre = usuario.Nombre,
-        Email = usuario.Email,
-        Rol = usuario.Rol.ToString(),
-        TenantId = usuario.TenantId,
-        TenantNombre = usuario.Tenant.Nombre
-    }
-});
+        return Ok(respuesta);
     }
 }

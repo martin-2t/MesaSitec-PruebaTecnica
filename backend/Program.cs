@@ -41,6 +41,7 @@ builder.Services.AddScoped<PasswordService>();
 
 builder.Services.AddControllers();
 builder.Services.AddScoped<SolicitudService>();
+builder.Services.AddScoped<AuthService>();
 
 builder.Services.AddEndpointsApiExplorer();
 
