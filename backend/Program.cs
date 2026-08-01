@@ -40,6 +40,7 @@ builder.Services.AddScoped<JwtService>();
 builder.Services.AddScoped<PasswordService>();
 
 builder.Services.AddControllers();
+builder.Services.AddScoped<SolicitudService>();
 
 builder.Services.AddEndpointsApiExplorer();
 
