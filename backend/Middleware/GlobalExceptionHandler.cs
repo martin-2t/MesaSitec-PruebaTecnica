@@ -26,25 +26,63 @@ public class GlobalExceptionHandler
         {
             _logger.LogError(ex, "Se produjo una excepción no controlada.");
 
-            await HandleExceptionAsync(context);
+            await HandleExceptionAsync(context, ex);
         }
     }
 
-    private static async Task HandleExceptionAsync(HttpContext context)
+    private static async Task HandleExceptionAsync(
+    HttpContext context,
+    Exception ex)
+{
+    var status = StatusCodes.Status500InternalServerError;
+    var title = "Error interno";
+    var detail = "Se produjo un error interno en el servidor.";
+    var codigo = "ERROR_INTERNO";
+
+    switch (ex)
     {
-        context.Response.StatusCode = (int)HttpStatusCode.InternalServerError;
-        context.Response.ContentType = "application/problem+json";
+        case UnauthorizedAccessException:
+            status = StatusCodes.Status403Forbidden;
+            title = "Operación no permitida";
+            detail = ex.Message;
+            codigo = ex.Message;
+            break;
 
-        var response = new
-        {
-            type = "https://mesasitec.local/errores/error-interno",
-            title = "Error interno",
-            status = 500,
-            detail = "Se produjo un error interno en el servidor.",
-            codigo = "ERROR_INTERNO"
-        };
+        case InvalidOperationException:
+            status = StatusCodes.Status409Conflict;
+            title = "Transición inválida";
+            detail = ex.Message;
+            codigo = ex.Message;
+            break;
 
-        await context.Response.WriteAsync(
-            JsonSerializer.Serialize(response));
+        case ArgumentException:
+            status = StatusCodes.Status422UnprocessableEntity;
+            title = "Error de validación";
+            detail = ex.Message;
+            codigo = ex.Message;
+            break;
+
+        case KeyNotFoundException:
+            status = StatusCodes.Status404NotFound;
+            title = "Recurso no encontrado";
+            detail = ex.Message;
+            codigo = "RECURSO_NO_ENCONTRADO";
+            break;
     }
+
+    context.Response.StatusCode = status;
+    context.Response.ContentType = "application/problem+json";
+
+    var response = new
+    {
+        type = $"https://mesasitec.local/errores/{codigo.ToLower()}",
+        title,
+        status,
+        detail,
+        codigo
+    };
+
+    await context.Response.WriteAsync(
+        JsonSerializer.Serialize(response));
+}
 }

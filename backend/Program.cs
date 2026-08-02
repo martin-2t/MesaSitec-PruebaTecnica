@@ -40,7 +40,10 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
 builder.Services.AddScoped<JwtService>();
 builder.Services.AddScoped<PasswordService>();
 builder.Services.AddScoped<AuthService>();
+builder.Services.AddScoped<SlaService>();
 builder.Services.AddScoped<SolicitudService>();
+
+
 
 builder.Services.AddControllers();
 

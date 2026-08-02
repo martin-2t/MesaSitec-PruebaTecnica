@@ -119,4 +119,70 @@ public class SolicitudesController : ControllerBase
 
         return Ok(resultado);
     }
+    [Authorize]
+[HttpPut("{id}")]
+public async Task<IActionResult> UpdateSolicitud(
+    Guid id,
+    [FromBody] SolicitudUpdateRequest request)
+{
+    var tenantIdClaim = User.FindFirstValue("tenantId");
+    var userIdClaim = User.FindFirstValue("sub");
+    var rol = User.FindFirstValue("rol");
+
+    if (tenantIdClaim == null ||
+        userIdClaim == null ||
+        rol == null)
+    {
+        return Unauthorized();
+    }
+
+    if (!Guid.TryParse(tenantIdClaim, out var tenantId) ||
+        !Guid.TryParse(userIdClaim, out var userId))
+    {
+        return Unauthorized();
+    }
+
+    var resultado = await _solicitudService.UpdateSolicitud(
+        id,
+        tenantId,
+        userId,
+        rol,
+        request);
+
+    if (resultado == null)
+    {
+        return NotFound();
+    }
+
+    return Ok(resultado);
+}
+ [Authorize]
+[HttpPost("{id}/transiciones")]
+public async Task<IActionResult> EjecutarTransicion(
+    Guid id,
+    [FromBody] SolicitudTransicionRequest request)
+{
+    var tenantIdClaim = User.FindFirstValue("tenantId");
+    var userIdClaim = User.FindFirstValue("sub");
+    var rol = User.FindFirstValue("rol");
+
+    if (tenantIdClaim == null ||
+        userIdClaim == null ||
+        rol == null)
+        return Unauthorized();
+
+    if (!Guid.TryParse(tenantIdClaim, out var tenantId) ||
+        !Guid.TryParse(userIdClaim, out var userId))
+        return Unauthorized();
+
+    var resultado =
+        await _solicitudService.EjecutarTransicion(
+            id,
+            tenantId,
+            userId,
+            rol,
+            request);
+
+    return Ok(resultado);
+}
 }
